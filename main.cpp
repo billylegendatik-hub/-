@@ -49,7 +49,7 @@ static void DrawBackdrop(){
  d->AddCircleFilled(ImVec2(s.x*.08f,s.y*.98f),s.y*.52f,IM_COL32(105,44,151,55),80);
  ImVec2 c(s.x*.81f,s.y*.72f);float r=s.y*.47f;
  d->AddCircle(c,r,IM_COL32(113,101,40,24),100,18);d->AddCircle(c,r*.82f,IM_COL32(38,61,123,24),100,12);
- d->AddText(ImGui::GetFont(),s.y*.33f,ImVec2(c.x-r*.73f,c.y-r*.25f),"CS2",IM_COL32(125,111,45,19));
+ d->AddText(ImGui::GetFont(),s.y*.33f,ImVec2(c.x-r*.73f,c.y-r*.25f),IM_COL32(125,111,45,19),"CS2");
 }
 static bool NavButton(const char*label,bool active,ImVec2 size){if(active)ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.15f,.22f,.42f,.95f));bool hit=ImGui::Button(label,size);if(active)ImGui::PopStyleColor();return hit;}
 static void AddCard(int idx,float width){
