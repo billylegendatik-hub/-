@@ -39,8 +39,25 @@ static std::wstring PickExe(){
 }
 static void Launch(const AppItem& a){if(a.path.empty()||!std::filesystem::exists(a.path))return;auto dir=std::filesystem::path(a.path).parent_path().wstring();ShellExecuteW(g_hwnd,L"open",a.path.c_str(),nullptr,dir.c_str(),SW_SHOWNORMAL);if(g_autoClose)PostMessageW(g_hwnd,WM_CLOSE,0,0);}
 static void Style(){
- ImGui::StyleColorsDark();auto& s=ImGui::GetStyle();s.WindowRounding=0;s.ChildRounding=12;s.FrameRounding=9;s.PopupRounding=10;s.ScrollbarRounding=8;s.WindowPadding=ImVec2(18,16);s.FramePadding=ImVec2(12,9);s.ItemSpacing=ImVec2(10,10);s.ChildBorderSize=1;
- auto*c=s.Colors;c[ImGuiCol_WindowBg]=ImVec4(.025f,.032f,.048f,1);c[ImGuiCol_ChildBg]=ImVec4(.055f,.066f,.088f,.91f);c[ImGuiCol_Border]=ImVec4(.18f,.20f,.25f,.65f);c[ImGuiCol_FrameBg]=ImVec4(.10f,.12f,.16f,.92f);c[ImGuiCol_FrameBgHovered]=ImVec4(.15f,.18f,.24f,1);c[ImGuiCol_Button]=ImVec4(.12f,.15f,.21f,.9f);c[ImGuiCol_ButtonHovered]=ImVec4(.20f,.26f,.39f,1);c[ImGuiCol_ButtonActive]=ImVec4(.25f,.34f,.55f,1);c[ImGuiCol_CheckMark]=BLUE;c[ImGuiCol_Header]=ImVec4(.18f,.25f,.42f,.8f);
+ ImGui::StyleColorsDark();
+ auto& s=ImGui::GetStyle();
+ s.WindowRounding=0; s.ChildRounding=14; s.FrameRounding=9; s.PopupRounding=12;
+ s.ScrollbarRounding=10; s.GrabRounding=8; s.WindowPadding=ImVec2(22,18);
+ s.FramePadding=ImVec2(13,10); s.ItemSpacing=ImVec2(12,12); s.ItemInnerSpacing=ImVec2(8,8);
+ s.ChildBorderSize=1; s.PopupBorderSize=1; s.FrameBorderSize=0;
+ s.Colors[ImGuiCol_WindowBg]=ImVec4(.025f,.031f,.048f,1);
+ s.Colors[ImGuiCol_ChildBg]=ImVec4(.055f,.067f,.095f,.86f);
+ s.Colors[ImGuiCol_Border]=ImVec4(.22f,.27f,.38f,.48f);
+ s.Colors[ImGuiCol_FrameBg]=ImVec4(.09f,.115f,.16f,.96f);
+ s.Colors[ImGuiCol_FrameBgHovered]=ImVec4(.13f,.17f,.24f,1);
+ s.Colors[ImGuiCol_FrameBgActive]=ImVec4(.16f,.21f,.31f,1);
+ s.Colors[ImGuiCol_Button]=ImVec4(.12f,.17f,.27f,.95f);
+ s.Colors[ImGuiCol_ButtonHovered]=ImVec4(.20f,.29f,.48f,1);
+ s.Colors[ImGuiCol_ButtonActive]=ImVec4(.25f,.36f,.59f,1);
+ s.Colors[ImGuiCol_CheckMark]=BLUE;
+ s.Colors[ImGuiCol_Header]=ImVec4(.16f,.23f,.39f,.8f);
+ s.Colors[ImGuiCol_Text]=ImVec4(.91f,.94f,1,1);
+ s.Colors[ImGuiCol_TextDisabled]=ImVec4(.49f,.56f,.69f,1);
 }
 static void DrawBackdrop(){
  ImDrawList*d=ImGui::GetBackgroundDrawList();ImVec2 s=ImGui::GetIO().DisplaySize;
@@ -53,13 +70,26 @@ static void DrawBackdrop(){
 }
 static bool NavButton(const char*label,bool active,ImVec2 size){if(active)ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.15f,.22f,.42f,.95f));bool hit=ImGui::Button(label,size);if(active)ImGui::PopStyleColor();return hit;}
 static void AddCard(int idx,float width){
- auto&a=g_apps[idx];ImGui::PushID(idx);ImGui::BeginChild("card",ImVec2(width,145),true);
- ImGui::TextColored(ImVec4(.92f,.95f,1,1),"%s",a.name.c_str());
- ImGui::Dummy(ImVec2(0,9));ImGui::TextDisabled("%s",a.version.c_str());ImGui::SameLine();ImGui::TextColored(BLUE,a.path.empty()?"ДОБАВИТЬ EXE":"УСТАНОВЛЕНО");
- ImGui::SetCursorPosY(ImGui::GetWindowHeight()-40);
+ auto& a=g_apps[idx]; ImGui::PushID(idx);
+ ImGui::BeginChild("project-card",ImVec2(width,166),true,ImGuiWindowFlags_NoScrollbar);
+ ImVec2 p=ImGui::GetWindowPos(), z=ImGui::GetWindowSize(); ImDrawList* d=ImGui::GetWindowDrawList();
+ ImU32 tint= a.favorite?IM_COL32(91,72,145,58):IM_COL32(55,91,164,52);
+ d->AddRectFilledMultiColor(p,ImVec2(p.x+z.x,p.y+z.y),IM_COL32(24,31,48,245),tint,IM_COL32(10,15,25,245),IM_COL32(13,18,29,245));
+ d->AddCircleFilled(ImVec2(p.x+z.x-5,p.y+8),55,tint,48);
+ d->AddRect(p,ImVec2(p.x+z.x,p.y+z.y),IM_COL32(91,116,165,80),14,0,1.0f);
+ ImGui::Dummy(ImVec2(0,3));
+ ImGui::TextColored(ImVec4(.94f,.96f,1,1),"%s",a.name.c_str());
+ ImGui::Dummy(ImVec2(0,7));
+ ImGui::TextDisabled("%s",a.version.c_str()); ImGui::SameLine();
+ ImGui::TextColored(BLUE,a.path.empty()?"НЕ ВЫБРАН ФАЙЛ":"ГОТОВО К ЗАПУСКУ");
+ ImGui::SetCursorPosY(111);
+ ImGui::TextColored(ImVec4(.98f,.72f,.32f,1),"%s",a.favorite?"★ В ИЗБРАННОМ":"THE WALL  /  APP");
+ ImGui::SetCursorPosY(132);
  if(ImGui::SmallButton(a.favorite?"★":"☆"))a.favorite=!a.favorite;
- ImGui::SameLine(ImGui::GetContentRegionAvail().x-64);if(ImGui::SmallButton("ОТКРЫТЬ"))Launch(a);
- ImGui::EndChild();ImGui::PopID();
+ ImGui::SameLine(ImGui::GetContentRegionAvail().x-75);
+ if(a.path.empty()){if(ImGui::SmallButton("ВЫБРАТЬ EXE")){auto path=PickExe();if(!path.empty())a.path=path;}}
+ else if(ImGui::SmallButton("ЗАПУСТИТЬ"))Launch(a);
+ ImGui::EndChild(); ImGui::PopID();
 }
 static void DrawAddPopup(){
  if(g_addPopup){ImGui::OpenPopup("Добавить свой проект");g_addPopup=false;}
@@ -76,32 +106,85 @@ static void DrawAddPopup(){
  }
 }
 static void DrawUI(){
- ImGui::SetNextWindowPos(ImVec2(0,0));ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+ ImGui::SetNextWindowPos(ImVec2(0,0)); ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
  ImGui::Begin("THE WALL##root",nullptr,ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoBackground);
- ImGui::BeginChild("topbar",ImVec2(0,52),false);
- ImGui::SetNextItemWidth(285);ImGui::InputTextWithHint("##search","Поиск проектов",g_search,sizeof(g_search));
- ImGui::SameLine(ImGui::GetWindowWidth()-360);ImGui::TextDisabled("⚙  Настройки");ImGui::SameLine();ImGui::TextColored(ImVec4(.75f,.55f,1,1),"●");ImGui::SameLine();ImGui::Text("THE WALL");ImGui::SameLine();if(ImGui::SmallButton("_"))ShowWindow(g_hwnd,SW_MINIMIZE);ImGui::SameLine();if(ImGui::SmallButton("×"))PostMessageW(g_hwnd,WM_CLOSE,0,0);
+ const float width=ImGui::GetWindowWidth();
+ ImGui::BeginChild("topbar",ImVec2(0,58),false,ImGuiWindowFlags_NoScrollbar);
+ ImGui::SetNextItemWidth(280); ImGui::InputTextWithHint("##search","⌕  Поиск проектов...",g_search,sizeof(g_search));
+ ImGui::SameLine(width-350);
+ ImGui::TextColored(ImVec4(.66f,.73f,.88f,1),"WORKSPACE");
+ ImGui::SameLine(); ImGui::TextColored(ImVec4(.72f,.58f,1,1),"●");
+ ImGui::SameLine(); ImGui::Text("THE WALL");
+ ImGui::SameLine(); if(ImGui::SmallButton("—"))ShowWindow(g_hwnd,SW_MINIMIZE);
+ ImGui::SameLine(); if(ImGui::SmallButton("×"))PostMessageW(g_hwnd,WM_CLOSE,0,0);
  ImGui::EndChild();
- ImGui::Dummy(ImVec2(0,6));
- ImGui::Text("Мои проекты");ImGui::SameLine();ImGui::TextColored(BLUE,"%d",(int)g_apps.size());ImGui::SameLine();ImGui::TextDisabled("   добавляй свои приложения в библиотеку");
- ImGui::SameLine(ImGui::GetWindowWidth()-145);if(ImGui::Button("+ Добавить",ImVec2(125,34)))g_addPopup=true;
- ImGui::Dummy(ImVec2(0,8));
- const char* filters[]={"Все проекты","Избранное","Добавленные"};
- for(int i=0;i<3;i++){if(i)ImGui::SameLine();if(NavButton(filters[i],g_filter==i,ImVec2(118,34)))g_filter=i;}
+ ImGui::Dummy(ImVec2(0,5));
+ ImGui::BeginChild("hero",ImVec2(0,132),true,ImGuiWindowFlags_NoScrollbar);
+ ImVec2 hp=ImGui::GetWindowPos(), hs=ImGui::GetWindowSize(); ImDrawList* hd=ImGui::GetWindowDrawList();
+ hd->AddRectFilledMultiColor(hp,ImVec2(hp.x+hs.x,hp.y+hs.y),IM_COL32(25,43,82,190),IM_COL32(39,61,117,170),IM_COL32(22,27,50,190),IM_COL32(17,24,42,190));
+ hd->AddCircleFilled(ImVec2(hp.x+hs.x-30,hp.y+10),100,IM_COL32(85,110,220,28),64);
+ ImGui::Dummy(ImVec2(0,4));
+ ImGui::TextColored(ImVec4(.59f,.72f,1,1),"PERSONAL APP LIBRARY");
+ ImGui::Dummy(ImVec2(0,4));
+ ImGui::Text("ТВОЁ ПРОСТРАНСТВО");
+ ImGui::TextDisabled("Собирай любимые приложения в одном месте и запускай в один клик.");
+ ImGui::SetCursorPos(ImVec2(hs.x-185,48));
+ ImGui::BeginGroup();
+ ImGui::TextColored(ImVec4(.96f,.97f,1,1),"%d  ПРОЕКТОВ",(int)g_apps.size());
+ ImGui::TextDisabled("ТВОЯ КОЛЛЕКЦИЯ");
+ ImGui::EndGroup();
+ ImGui::EndChild();
  ImGui::Dummy(ImVec2(0,12));
- float avail=ImGui::GetContentRegionAvail().x;float gap=12;float cardW=(avail-gap*3)/4.0f;if(cardW<150)cardW=(avail-gap)/2.0f;
- int shown=0;
- for(int i=0;i<(int)g_apps.size();i++){
-  auto&a=g_apps[i];if(g_filter==1&&!a.favorite)continue;if(g_filter==2&&a.path.empty())continue;
-  if(g_search[0]&&a.name.find(g_search)==std::string::npos)continue;
-  if(shown%4)ImGui::SameLine(0,gap);AddCard(i,cardW);shown++;
+ ImGui::Text("МОЯ БИБЛИОТЕКА"); ImGui::SameLine();
+ ImGui::TextColored(BLUE,"%02d",(int)g_apps.size());
+ ImGui::SameLine(); ImGui::TextDisabled("  /  УПРАВЛЯЙ СВОИМИ ПРИЛОЖЕНИЯМИ");
+ ImGui::SameLine(width-160);
+ if(ImGui::Button("+  ДОБАВИТЬ",ImVec2(142,36)))g_addPopup=true;
+ ImGui::Dummy(ImVec2(0,5));
+ const char* filters[]={"Все проекты","Избранное","Добавленные"};
+ for(int i=0;i<3;i++){if(i)ImGui::SameLine();if(NavButton(filters[i],g_filter==i,ImVec2(124,35)))g_filter=i;}
+ ImGui::Dummy(ImVec2(0,10));
+ if(g_page==2){
+  ImGui::Text("НАСТРОЙКИ"); ImGui::Dummy(ImVec2(0,8));
+  ImGui::BeginChild("settings-card",ImVec2(0,120),true);
+  ImGui::Checkbox("Закрывать THE WALL после запуска приложения",&g_autoClose);
+  ImGui::TextDisabled("Приложения запускаются локально с твоего компьютера.");
+  ImGui::EndChild();
+ } else {
+  float avail=ImGui::GetContentRegionAvail().x, gap=14;
+  int columns=avail>850?4:avail>570?3:avail>360?2:1;
+  float cardW=(avail-gap*(columns-1))/columns;
+  int shown=0;
+  for(int i=0;i<(int)g_apps.size();i++){
+   auto&a=g_apps[i];
+   if((g_page==1||g_filter==1)&&!a.favorite)continue;
+   if(g_filter==2&&a.path.empty())continue;
+   if(g_search[0]&&a.name.find(g_search)==std::string::npos)continue;
+   if(shown%columns)ImGui::SameLine(0,gap);
+   AddCard(i,cardW); shown++;
+  }
+  if(shown==0){
+   ImGui::BeginChild("empty-state",ImVec2(0,190),true);
+   ImGui::Dummy(ImVec2(0,27));
+   ImGui::SetCursorPosX(24); ImGui::TextColored(ImVec4(.68f,.76f,1,1),"✦");
+   ImGui::SetCursorPosX(24); ImGui::Text("ТВОЯ БИБЛИОТЕКА ПОКА ПУСТА");
+   ImGui::SetCursorPosX(24); ImGui::TextDisabled("Добавь первый проект — он появится здесь отдельной карточкой.");
+   ImGui::SetCursorPosX(24); if(ImGui::Button("+  ДОБАВИТЬ ПЕРВЫЙ ПРОЕКТ",ImVec2(225,38)))g_addPopup=true;
+   ImGui::EndChild();
+  }
  }
- if(shown==0){ImGui::BeginChild("empty",ImVec2(0,190),true);ImGui::Dummy(ImVec2(0,30));ImGui::SetCursorPosX(20);ImGui::Text("Здесь пока пусто");ImGui::SetCursorPosX(20);ImGui::TextDisabled("Нажми «+ Добавить», чтобы создать свою вкладку и выбрать EXE.");ImGui::EndChild();}
  ImGui::SetCursorPosY(ImGui::GetWindowHeight()-66);
- ImGui::BeginChild("bottomnav",ImVec2(0,54),true);
- float navW=130;float start=(ImGui::GetWindowWidth()-navW*3)/2;
- ImGui::SetCursorPosX(start);if(NavButton("⌂  Проекты",g_page==0,ImVec2(navW,38)))g_page=0;ImGui::SameLine();if(NavButton("＋  Добавить",g_page==1,ImVec2(navW,38))){g_page=1;g_addPopup=true;}ImGui::SameLine();if(NavButton("☆  Избранное",g_page==2,ImVec2(navW,38))){g_page=2;g_filter=1;}
- ImGui::EndChild();DrawAddPopup();ImGui::End();
+ ImGui::BeginChild("bottomnav",ImVec2(0,54),true,ImGuiWindowFlags_NoScrollbar);
+ float navW=150, start=(ImGui::GetWindowWidth()-navW*3-24)/2;
+ ImGui::SetCursorPosX(start);
+ if(NavButton("⌂   ПРОЕКТЫ",g_page==0,ImVec2(navW,38)))g_page=0;
+ ImGui::SameLine(0,12);
+ if(NavButton("+   ДОБАВИТЬ",false,ImVec2(navW,38))){g_page=0;g_addPopup=true;}
+ ImGui::SameLine(0,12);
+ if(NavButton("⚙   НАСТРОЙКИ",g_page==2,ImVec2(navW,38)))g_page=2;
+ ImGui::EndChild();
+ DrawAddPopup();
+ ImGui::End();
 }
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND,UINT,WPARAM,LPARAM);
 static LRESULT WINAPI WndProc(HWND h,UINT m,WPARAM w,LPARAM l){if(ImGui_ImplWin32_WndProcHandler(h,m,w,l))return 1;switch(m){case WM_SIZE:if(g_device&&w!=SIZE_MINIMIZED){CleanupRenderTarget();g_swapChain->ResizeBuffers(0,(UINT)LOWORD(l),(UINT)HIWORD(l),DXGI_FORMAT_UNKNOWN,0);CreateRenderTarget();}return 0;case WM_DESTROY:PostQuitMessage(0);return 0;}return DefWindowProcW(h,m,w,l);}
